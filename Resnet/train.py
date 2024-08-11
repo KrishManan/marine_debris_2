@@ -24,7 +24,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument('-dataset', type=str,
-                        default='./dataset/Cropped_Data/train',
+                        default='../Cropped_Data/train',
                         help='read path for training')
     parser.add_argument('-savepath', type=str,
                         default='./results')
