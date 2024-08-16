@@ -8,13 +8,22 @@ from PIL import Image
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import time
+# from resnet import resnet50
+from torchvision.models import resnet50
 
-model = YOLO("../weights")
+ymodel = YOLO("../Weights/Yolov10best.pt")
 
-from resnet import resnet50
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-img_path="../image_path"
-img=cv2.imread(img_path)
+rmodel = resnet50(num_classes=3).to(device)
+
+# load model weights
+weights_path = "../Weights/Resnet50best.pth"
+assert os.path.exists(weights_path), "file: '{}' does not exist.".format(weights_path)
+rmodel.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
+
+
+
 
 class_names = ['can', 'carton', 'plastic bag', 'plastic bottle', 'plastic con', 'styrofoam', 'tire']
 
@@ -34,16 +43,19 @@ def add_text_with_background(img, text, pos, font=cv2.FONT_HERSHEY_SIMPLEX, font
     # Write the text on the image
     cv2.putText(img, text, pos, font, font_scale, color, thickness)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-data_transform = transforms.Compose(
-    [transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+data_transform =  transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+
+img_path="../Data/test/images/Screenshot-2024-06-25-at-17-01-08_png.rf.7361b002c025aafdb1a893a7e82a25a7.jpg"
+img=cv2.imread(img_path)
 
 def main():
     start = time.time()
-    results=model.predict(img)
+    results=ymodel.predict(img)
 
     for result in results:
         boxes = result.boxes
@@ -52,7 +64,8 @@ def main():
             label = result.names[int(box.cls)]
             confidence = box.conf.item()
 
-            cropped_img = img[y1:y2, x1:x2]
+
+            cropped_img = img[int(y1):int(y2), int(x1):int(x2)]
 
             cropped_h, cropped_w = cropped_img.shape[:2]
 
@@ -67,30 +80,33 @@ def main():
             start_y = (400 - cropped_h) // 2
             padded_img[start_y:start_y + cropped_h, start_x:start_x + cropped_w] =cropped_img
 
-            input_img = data_transform(padded_img)
+            input_img = Image.fromarray(padded_img)
+
+            input_img = data_transform(input_img)
             input_img = torch.unsqueeze(input_img, dim=0)
 
-            model = resnet50(num_classes=3).to(device)
+            
 
-            # load model weights
-            weights_path = "./results/AlexNet/Tuesday_28_May_2024_18h_57m_17s/checkpoints/AlexNet-best.pth"
-            assert os.path.exists(weights_path), "file: '{}' dose not exist.".format(weights_path)
-            model.load_state_dict(torch.load(weights_path))
-
-            model.eval()
+            rmodel.eval()
             with torch.no_grad():
                 # Predict class
-                output = torch.squeeze(model(img.to(device))).cpu()
+                output = torch.squeeze(rmodel(input_img.to(device))).cpu()
+
+                print(output)
                 
                 # Compute softmax probabilities
                 predict = torch.softmax(output, dim=0)
+
+                print(predict)
 
                 predict_cla = torch.argmax(predict).numpy()
 
                 actual_cla=class_indict[predict_cla]
 
+                print(f"actual class:{actual_cla}")
+
                 # Calculate the weighted average
-                weighted_average = (predict[0] * 1 + predict[1] * 2 + predict[2] * 3) / 3
+                weighted_average = (predict[0] * 1 + predict[1] * 2 + predict[2] * 3)
             
 
                 
@@ -112,3 +128,6 @@ def main():
     end = time.time()
     timedif = end - start
     print(f"time elapsed:{timedif}")
+
+if __name__ == '__main__':
+    main()
