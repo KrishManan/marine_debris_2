@@ -7,19 +7,20 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 import time
 
-from resnet import resnet50
+from resnet import resnet18
 
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    data_transform = transforms.Compose(
-        [transforms.Resize((224, 224)),
-         transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    data_transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     # load image
-    img_path = "./dataset/flower_dataset/val/roses/921984328_a60076f070_m.jpg"
+    img_path = "../Cropped_Data/benchmark_images/26.png"
     assert os.path.exists(img_path), "file: '{}' dose not exist.".format(img_path)
     img = Image.open(img_path)
 
@@ -29,15 +30,15 @@ def main():
     # expand batch dimension
     img = torch.unsqueeze(img, dim=0)
 
-    class_indict = ["0-daisy", "1-dandelion", "2-roses", "3-sunflowers", "4-tulips"]
+    class_indict = ["1", "2", "3"]
 
     # create model
-    model = resnet50(num_classes=3).to(device)
+    model = resnet18(num_classes=3).to(device)
 
     # load model weights
-    weights_path = "./results/AlexNet/Tuesday_28_May_2024_18h_57m_17s/checkpoints/AlexNet-best.pth"
+    weights_path = "../Weights/Resnet18best.pth"
     assert os.path.exists(weights_path), "file: '{}' dose not exist.".format(weights_path)
-    model.load_state_dict(torch.load(weights_path))
+    model.load_state_dict(torch.load(weights_path,map_location=torch.device('cpu')))
 
     model.eval()
     with torch.no_grad():
@@ -45,6 +46,7 @@ def main():
         start=time.time()
         output = torch.squeeze(model(img.to(device))).cpu()
         predict = torch.softmax(output, dim=0)
+        print(predict)
         predict_cla = torch.argmax(predict).numpy()
         end=time.time()
         timedif=end-start

@@ -8,17 +8,17 @@ from PIL import Image
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import time
-# from resnet import resnet50
-from torchvision.models import resnet50
+from resnet import resnet18
+# from torchvision.models import resnet50
 
-ymodel = YOLO("../Weights/Yolov10best.pt")
+ymodel = YOLO("../Weights/Yolov8nbest.pt")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-rmodel = resnet50(num_classes=3).to(device)
+rmodel = resnet18(num_classes=3).to(device)
 
 # load model weights
-weights_path = "../Weights/Resnet50best.pth"
+weights_path = "../Weights/Resnet18best.pth"
 assert os.path.exists(weights_path), "file: '{}' does not exist.".format(weights_path)
 rmodel.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
 
@@ -50,8 +50,9 @@ data_transform =  transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-img_path="../Data/test/images/Screenshot-2024-06-25-at-17-01-08_png.rf.7361b002c025aafdb1a893a7e82a25a7.jpg"
+img_path="resources/testimage4.jpg"
 img=cv2.imread(img_path)
+img=cv2.resize(img,(1000,600))
 
 def main():
     start = time.time()
@@ -109,9 +110,6 @@ def main():
                 weighted_average = (predict[0] * 1 + predict[1] * 2 + predict[2] * 3)
             
 
-                
-
-
 
 
             cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (139, 0, 0), 4)
@@ -120,14 +118,15 @@ def main():
 
                     
             add_text_with_background(img, f'{label} conf:{confidence:.2f} danger:{weighted_average:.2f}', (int(x1), int(y1)-10), bg_color=(255, 255, 255))
-    
+    end = time.time()
+    timedif = end - start
+    print(f"time elapsed:{timedif}")
+
     cv2.imshow("Annotated Image", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
-    end = time.time()
-    timedif = end - start
-    print(f"time elapsed:{timedif}")
+    
 
 if __name__ == '__main__':
     main()
