@@ -1,9 +1,0 @@
-ultralytics
-torch
-torchvision
-opencv-python
-numpy 
-matplotlib
-pillow
-reportlab
-pandas
