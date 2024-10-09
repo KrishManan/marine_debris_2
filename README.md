@@ -1,67 +1,95 @@
-# Marine Debris Classification Project
+# Trash2Danger
+
+__A Two Stage Deep Learning Based Pipeline for Marine Debris Danger Level Assessment__
 
 ## Overview
 
-This project aims to develop a neural network model to classify images of marine debris based on their danger level. The approach involves using a YOLOv10 network for object detection to identify marine debris in images, followed by using a ResNet50 model to classify the danger level of the detected debris.
+The Trash2Danger project presents a novel method for assessing the danger levels of marine debris using deep learning techniques. This two-stage model is comprised of an object detection model that classifies marine debris and a danger level prediction system that evaluates the ecological threat posed by each piece of debris. The goal of our model is to improve the efficiency of clean up efforts by allowing for more targeted intervention on areas of higher risk marine debris.
+
+
+<img src="./Examples/predictimage4.png" alt="Example Image" style="width: 100%;">
 
 ## Table of Contents
 
-- [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [Usage](#usage)
 - [Model Architecture](#model-architecture)
+- [Weights](#weights)
 - [Dataset](#dataset)
 - [Training](#training)
-- [Evaluation](#evaluation)
-- [Results](#results)
 - [License](#license)
+- [Examples](#examples)
 - [Acknowledgments](#acknowledgments)
-
-## Project Structure
-
-marine-debris-classification/ │ ├── data/ # Dataset directory │ ├── train/ # Training images │ ├── val/ # Validation images │ └── annotations/ # Annotations for training │ ├── models/ # Directory for model definitions │ ├── yolov10/ # YOLOv10 model │ └── resnet50/ # ResNet50 model │ ├── utils/ # Utility functions │ ├── results/ # Directory for saving results and logs │ ├── train.py # Main script for training ├── evaluate.py # Script for evaluating models └── README.md # Project documentation
-
 
 ## Getting Started
 
 To get started with this project, clone the repository and install the required dependencies. You can do this using the following commands:
 
 ```bash
-git clone https://github.com/yourusername/marine-debris-classification.git
-cd marine-debris-classification
+git clone https://github.com/KrishManan/marine_debris_2.git
+cd marine_debris_2
 pip install -r requirements.txt
 ```
 
 ## Requirements
-Python 3.x
+ultralytics
 
-PyTorch
+torch
 
 torchvision
 
-OpenCV
+opencv-python
 
 Other required libraries listed in requirements.txt
 
-## Model Architecture
-YOLOv10: This model is utilized for detecting marine debris in images. It outputs bounding boxes and class labels for the identified debris.
+## Usage
+Open the [src](src/) folder, where all the prediction and final analysis scripts are for the overall two stage model. 
 
-ResNet50: After detecting the debris, the images (with bounding boxes) are fed into a ResNet50 model to classify the danger level of the debris on a scale from 1 to 3.
+[finalanalysis.py](src/finalanalysis.py) runs an overall analysis on a video using our pipeline, generating bar charts and reports at the end on class information
+
+[finalpredict.py](src/finalpredict.py) runs the overall prediction of the two stage model on a single overall image
+
+[finalpredictvideo.py](src/finalpredictvideo.py) runs the overall prediction of the two stage model on a video
+
+
+
+
+## Model Architecture
+The overall pipeline of Trash2Danger consists of a 2 stage model. One stage to output bounding boxes and class labels for identified debris, and another to output danger level predictions for identified debris. 
+
+<img src="./Examples/model_architecture.jpg" alt="Model Architecture" style="width: 100%;">
+
+__Stage 1__
+For the stage 1 model, any obect detection model will work, but we decided to use the yolov8n model in Trash2Danger, because of it's small size, fast inference time, and decent performance. Stage 1 training and running can be found in the [Yolo](Yolo/) folder. 
+
+__Stage 2__
+For the stage 2 model, we used the Resnet50 model. We trained our danger level prediction model to output danger levels on a scale from 1-3, where 1 is low danger, 2 is moderate danger, and 3 is high danger. Stage 2 training and running can be found in the 
+
+## Weights
+Pretrained weights are available in the [weights](weights/) folder for all the models that were tested.
+The two resnet models for the stage 2, Resnet 18 and 50, as well as all the object detection stage 1 models are available with pretrained weights.
 
 ## Dataset
-The dataset consists of images containing various types of marine debris, annotated with bounding boxes and classes. The dataset is split into training and validation sets, with annotations provided in a compatible format for the YOLO model. 
+For stage 1 training, The dataset consists of images containing various types of marine debris, annotated with bounding boxes and marine debris classes. The dataset is split into training and validation sets, with annotations provided in a compatible format for the YOLO model. 
+
+For stage 2 training, the individual bounding boxes that are annotated from the stage 1 dataset were cropped out, padded, and downsized. These were than labelled on danger level from 1-3.
 
 ## Dataset Sources
-Some images taken and generated by ourselves
-Others from this open source dataset https://universe.roboflow.com/reconhecimentoimgs/global-solution/browse?queryText=&pageSize=50&startingIndex=0&browseQuery=true
+Most images taken and generated by ourselves from drone footage on Dapeng Bay, Shenzhen
+Others from these open source datasets: https://universe.roboflow.com/reconhecimentoimgs/global-solution/browse?queryText=&pageSize=50&startingIndex=0&browseQuery=true,  https://universe.roboflow.com/gw-khadatkar-and-sv-wasule/trash-llsto 
+
+## Training
+To train your own model, create a stage 1 dataset of annotated images of marine debris in the yolo format. Then use the [cropper.py](Resnet/cropper.py) to create the stage 2 training set from the stage 1 dataset.
+
+## Examples
+Examples and testing images can be found in the [Examples](Examples/) folder and [Test](Examples/Test/) folder.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
-YOLOv10 for object detection.
+YOLOv8 for object detection.
 
 ResNet for image classification.
-
-Any other relevant acknowledgments or references.
 
 Feel free to contribute to the project, report issues, or suggest improvements!

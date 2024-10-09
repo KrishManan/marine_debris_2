@@ -11,18 +11,21 @@ from resnet import resnet18
 from report import create_report
 # from torchvision.models import resnet50
 
-ymodel = YOLO("../weights/Yolov8nbest.pt")
+ymodel = YOLO("../weights/Yolov8nbest.pt") #replace with your stage 1 model path
+weights_path = "../Weights/Resnet18best.pth" #replace with your stage 2 model path
+video_path = '../Examples/Test/test.mp4' #replace with your video path
+
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 rmodel = resnet18(num_classes=3).to(device)
 
-# load model weights
-weights_path = "../Weights/Resnet18best.pth"
+
+
 assert os.path.exists(weights_path), "file: '{}' does not exist.".format(weights_path)
 rmodel.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
 
-video_path = 'test.mp4'
 cap = cv2.VideoCapture(video_path)
 
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) 
@@ -55,7 +58,7 @@ bars = ax.bar(class_names, class_counts, color=colors)
 
 ax.set_xlabel('Classes') 
 ax.set_ylabel('Counts') 
-ax.set_title('Class Counts') 
+ax.set_title('Marine Debris Class Distribution') 
 ax.set_ylim(0, 10) 
 ax.yaxis.get_major_locator().set_params(integer=True)
 plt.setp(ax.get_xticklabels(), rotation=15, horizontalalignment='right')
@@ -67,7 +70,7 @@ bars2 = ax2.bar(class_indict, danger_counts, color=colors2)
 
 ax2.set_xlabel('Danger Levels') 
 ax2.set_ylabel('Counts') 
-ax2.set_title('Danger Counts') 
+ax2.set_title('Danger Level Distribution') 
 ax2.set_ylim(0, 10) 
 ax2.yaxis.get_major_locator().set_params(integer=True)
 
@@ -229,6 +232,11 @@ while cap.isOpened():
         cv2.waitKey(1)
         out1.write(combined_image)
         framecount += 1
+        print(f"class_names:{class_names}")
+        print(f"class_counts:{class_counts}")
+        print(f"danger_classes:{danger_classes}")
+        print(f"danger_counts:{danger_counts}")
+        print(f"true_dangers:{true_dangers}")
         create_report("latest_chart.png", "latest_chart2.png", "report.pdf", class_names, class_counts,danger_classes , danger_counts, true_dangers)
 
     else:     

@@ -11,14 +11,18 @@ import time
 # from resnet import resnet50
 from torchvision.models import resnet50
 
-ymodel = YOLO("../Weights/Yolov10best.pt")
+ymodel = YOLO("../Weights/Yolov8nbest.pt") #replace with your stage 1 model path
+weights_path = "../Weights/Resnet18best.pth" #replace with your stage 2 model path
+video_path = '../Examples/Test/test.mp4' #replace with your video path
+
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 rmodel = resnet50(num_classes=3).to(device)
 
 # load model weights
-weights_path = "../Weights/Resnet50best.pth"
+
 assert os.path.exists(weights_path), "file: '{}' does not exist.".format(weights_path)
 rmodel.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
 
@@ -51,7 +55,7 @@ data_transform =  transforms.Compose([
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
 
-video_path = 'test.mp4'
+
 cap = cv2.VideoCapture(video_path)
 
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) 

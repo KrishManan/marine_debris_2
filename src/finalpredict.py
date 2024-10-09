@@ -8,17 +8,20 @@ from PIL import Image
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import time
-from resnet import resnet18
+from resnet import resnet50
 # from torchvision.models import resnet50
 
-ymodel = YOLO("../Weights/Yolov8nbest.pt")
+ymodel = YOLO("../Weights/Yolov8nbest.pt") #replace with your stage 1 model path
+weights_path = "../Weights/Resnet50best.pth" #replace with your stage 2 model path
+img_path="../Examples/Test/testimage.jpg" #replace with your image path
+
+
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-rmodel = resnet18(num_classes=3).to(device)
+rmodel = resnet50(num_classes=3).to(device)
 
-# load model weights
-weights_path = "../Weights/Resnet18best.pth"
+
 assert os.path.exists(weights_path), "file: '{}' does not exist.".format(weights_path)
 rmodel.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
 
@@ -50,7 +53,7 @@ data_transform =  transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-img_path="resources/testimage4.jpg"
+
 img=cv2.imread(img_path)
 img=cv2.resize(img,(1000,600))
 
@@ -62,6 +65,7 @@ def main():
         boxes = result.boxes
         for box in boxes:
             x1, y1, x2, y2 = box.xyxy[0]
+            print(x1, y1, x2, y2)
             label = result.names[int(box.cls)]
             confidence = box.conf.item()
 
@@ -125,6 +129,7 @@ def main():
     cv2.imshow("Annotated Image", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    # cv2.imwrite("resources/predictimage.png",img)
     
     
 
